@@ -1,0 +1,65 @@
+name: Run Jupyter Notebook
+
+on:
+  schedule:
+    - cron: '0 14 * * *'  # Runs daily at 8 AM UTC, 8 AM CT
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  run-notebook:
+    runs-on: ubuntu-latest  # Runs on an Ubuntu server
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install Chrome and ChromeDriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+      - name: Kill any existing Chrome processes
+        run: pkill -9 chrome || true  # Kill the chrome process to prevent conflicts with previous runs
+        
+      - name: Install Dependencies
+        run: |
+          pip install notebook nbconvert pandas openpyxl selenium # Add your libraries
+      
+      - name: Run Jupyter Notebook
+        run: |
+          jupyter nbconvert --to notebook --execute CMRT_RMI_DailyDownload.ipynb
+      
+      - name: list all downloaded RMI list
+        run: ls -l /home/runner/Downloads
+
+      - name: Convert XML File to XLSX File
+        run:
+          jupyter nbconvert --to notebook --execute Convert_XML_XLSX.ipynb
+      - name: Print out current dir
+        run: pwd
+      
+      - name: list all within working dir
+        run: ls -l /home/runner/work/
+      
+      - name: list all RMI list
+        run: ls -l /home/runner/Downloads
+
+      - name: Move XML and XLSX File to Repository
+        run: |
+          mv /home/runner/Downloads/* $GITHUB_WORKSPACE/Facility_List || true
+          mv /home/runner/work/RMI_Daily/RMI_Daily/*.xlsx $GITHUB_WORKSPACE/Facility_List_xlsx || true
+      
+      - name: Commit and Push Downloaded File
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add *
+          git commit -m "Add downloaded RMI file"
+          git push https://github.com/${{ github.repository }}.git HEAD:master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+
