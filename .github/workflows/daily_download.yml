@@ -49,7 +49,7 @@ jobs:
       - name: Move XML and XLSX File to Repository
         run: |
           mv /home/runner/Downloads/* $GITHUB_WORKSPACE/Facility_List || true
-          mv /home/runner/work/RMI_Daily/RMI_Daily/*.xlsx $GITHUB_WORKSPACE/Facility_List_xlsx || true
+          mv /home/runner/work/RMI_List_Daily/RMI_List_Daily/*.xlsx $GITHUB_WORKSPACE/Facility_List_xlsx || true
       
       - name: Commit and Push Downloaded File
         run: |
